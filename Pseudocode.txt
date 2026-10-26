@@ -1,0 +1,112 @@
+PROGRAM CommunityHealthSymptomReferralSystem
+    DECLARE choice AS INTEGER
+    DECLARE cases AS LIST OF CaseRecord
+
+    FUNCTION Main()
+        WHILE TRUE DO
+            DISPLAY "===== CHSRS Main Menu ====="
+            DISPLAY "1. Register New Case"
+            DISPLAY "2. View Pending Referrals"
+            DISPLAY "3. Update Case Status"
+            DISPLAY "4. Exit"
+            INPUT choice
+
+            IF choice = 1 THEN
+                CALL RegisterNewCase()
+            ELSE IF choice = 2 THEN
+                CALL ViewPendingReferrals()
+            ELSE IF choice = 3 THEN
+                CALL UpdateCaseStatus()
+            ELSE IF choice = 4 THEN
+                DISPLAY "Thank you. System closed."
+                EXIT
+            ELSE
+                DISPLAY "Invalid choice. Please try again."
+            END IF
+        END WHILE
+    END FUNCTION
+
+    FUNCTION RegisterNewCase()
+        DECLARE name, village, chwID AS STRING
+        DECLARE age AS INTEGER
+        DECLARE sex AS STRING
+        DECLARE symptoms AS LIST OF STRING
+        DECLARE urgency AS STRING
+        DECLARE score AS INTEGER
+        DECLARE caseID AS STRING
+        DECLARE moreSymptoms AS BOOLEAN
+
+        INPUT name, age, sex, village, chwID
+        symptoms ← empty list
+        moreSymptoms ← TRUE
+
+        WHILE moreSymptoms DO
+            INPUT symptom
+            ADD symptom TO symptoms
+            INPUT "Add another symptom? (Y/N)"
+            IF answer = "N" THEN moreSymptoms ← FALSE
+        END WHILE
+
+        urgency, score ← CalculateUrgency(symptoms)
+        caseID ← GenerateCaseID()
+
+        IF urgency = "Red" THEN
+            status ← "Immediate Referral"
+            DISPLAY "DANGER SIGNS PRESENT – Refer immediately to nearest PHU"
+            DISPLAY GenerateReferralNote(name, age, symptoms, village)
+        ELSE IF urgency = "Yellow" THEN
+            status ← "Monitor"
+            DISPLAY "Moderate concern – Advise PHU visit within 24 hours"
+        ELSE
+            status ← "Home Care"
+            DISPLAY "Mild symptoms – Provide home-care advice"
+        END IF
+
+        STORE CaseRecord(caseID, name, age, sex, village, chwID,
+                         symptoms, urgency, score, status, CURRENT_TIMESTAMP)
+        DISPLAY "Case registered successfully. Case ID: " + caseID
+    END FUNCTION
+
+    FUNCTION CalculateUrgency(symptoms)
+        score ← 0
+        FOR EACH s IN symptoms DO
+            IF s IN DangerSigns THEN          // convulsions, can't drink, severe bleeding...
+                score ← score + 10
+            ELSE IF s IN ModerateSigns THEN   // high fever, persistent vomiting...
+                score ← score + 5
+            ELSE
+                score ← score + 1
+            END IF
+        END FOR
+
+        IF score ≥ 10 THEN
+            RETURN "Red", score
+        ELSE IF score ≥ 5 THEN
+            RETURN "Yellow", score
+        ELSE
+            RETURN "Green", score
+        END IF
+    END FUNCTION
+
+    FUNCTION ViewPendingReferrals()
+        FOR EACH c IN cases WHERE status = "Immediate Referral"
+                              OR status = "Monitor" DO
+            DISPLAY c.caseID, c.name, c.village, c.urgency, c.timestamp
+        END FOR
+    END FUNCTION
+
+    FUNCTION UpdateCaseStatus()
+        INPUT caseID, newStatus
+        FIND case WHERE caseID matches
+        IF found THEN
+            UPDATE status ← newStatus
+            DISPLAY "Status updated."
+        ELSE
+            DISPLAY "Case not found."
+        END IF
+    END FUNCTION
+
+    FUNCTION GenerateCaseID()
+        RETURN "CH-" + CURRENT_DATE + "-" + sequentialNumber
+    END FUNCTION
+END PROGRAM
