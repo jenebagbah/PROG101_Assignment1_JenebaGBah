@@ -1,0 +1,70 @@
+COMMUNITY HEALTH SYMPTOM REPORTING AND REFERRAL SYSTEM (CHSRS)
+Step-by-Step Algorithm
+Student: Jeneba G. Bah | ID: 905006249 | PROG101
+
+============================================================
+MAIN ALGORITHM
+============================================================
+1. Start
+2. Display welcome message and main menu:
+      1 = Register New Case
+      2 = View Pending Referrals
+      3 = Update Case Status
+      4 = Exit
+3. Accept user choice
+4. IF choice = 1 THEN Call module RegisterNewCase()
+5. ELSE IF choice = 2 THEN Call module ViewPendingReferrals()
+6. ELSE IF choice = 3 THEN Call module UpdateCaseStatus()
+7. ELSE IF choice = 4 THEN Display “System closed. Thank you.” and Stop
+8. ELSE Display “Invalid choice” and return to menu
+9. Repeat steps 2–8 until user chooses Exit
+10. Stop
+
+============================================================
+MODULE: RegisterNewCase()
+============================================================
+1. Accept PatientName, Age, Sex, Village, CHW_ID
+2. Accept list of symptoms (loop until user indicates no more symptoms)
+3. For each symptom, accept severity indicator if required
+4. Call CalculateUrgency(symptoms) → returns urgencyLevel (Green/Yellow/Red) and score
+5. IF urgencyLevel = “Red” THEN
+      Generate referral note, set status = “Immediate Referral”, display nearest PHU advice
+6. ELSE IF urgencyLevel = “Yellow” THEN
+      Advise close monitoring / visit PHU within 24 h, set status = “Monitor”
+7. ELSE
+      Provide home-care advice, set status = “Home Care”
+8. Store case record (CaseID, demographics, symptoms, urgency, status, timestamp)
+9. Display confirmation and CaseID
+10. Return to main menu
+
+============================================================
+MODULE: CalculateUrgency(symptoms)
+============================================================
+1. Initialise score = 0
+2. FOR EACH symptom in the list:
+      IF symptom is a danger sign (convulsions, inability to drink/breastfeed,
+         severe bleeding, unconsciousness, difficulty breathing) THEN score = score + 10
+      ELSE IF symptom is moderate (high fever, persistent vomiting, diarrhoea > 3 days,
+         chest indrawing) THEN score = score + 5
+      ELSE score = score + 1   // mild symptoms
+3. IF score ≥ 10 THEN urgency = “Red”
+4. ELSE IF score ≥ 5 THEN urgency = “Yellow”
+5. ELSE urgency = “Green”
+6. RETURN urgency, score
+
+============================================================
+MODULE: ViewPendingReferrals()
+============================================================
+1. Load all cases
+2. Filter cases where status = “Immediate Referral” OR status = “Monitor”
+3. Display CaseID, Name, Village, Urgency, Timestamp for each
+4. Return to main menu
+
+============================================================
+MODULE: UpdateCaseStatus()
+============================================================
+1. Accept CaseID and newStatus
+2. Search for the case
+3. IF found THEN update status and confirm
+4. ELSE display “Case not found”
+5. Return to main menu
